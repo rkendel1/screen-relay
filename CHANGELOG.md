@@ -4,18 +4,28 @@
 
 <!-- release:start -->
 
+The first release published as `@appport/screen-relay`. Earlier releases were published as `screen-relay`. The `screen-relay` command is unchanged; install it with `npm install -g @appport/screen-relay`. screen-relay is becoming an AppPort application, but this release adds no AppPort capabilities yet.
+
 ### New Features
 
-- Added **one-time viewer tickets**: `POST /tickets` returns a ticket that opens one WebSocket within 60 seconds, so a custom client can connect without holding the session token (#64)
+- Added **one-time viewer tickets**: `POST /tickets` returns a ticket that opens one WebSocket within 60 seconds, so a custom client can connect without holding the session token (vercel-labs/screen-relay#64)
+- Added the **`remote-host` agent skill**, which runs screen-relay on a remote machine, container, or cloud sandbox behind an HTTPS URL. It replaces the `vercel-sandbox` skill (#1)
 
 ### Improvements
 
-- **GitHub releases** no longer attach `relay-engine` binaries. `screen-relay install` already builds the engine on each machine (#67)
+- **GitHub releases** no longer attach `relay-engine` binaries. `screen-relay install` already builds the engine on each machine (vercel-labs/screen-relay#67)
+- **Agent detection** no longer depends on a vendor package. The CLI checks the same environment variables itself, and `SCREEN_RELAY_AGENT` still overrides it (#1)
+- The **MCP App example** runs its automation tools locally or through any command prefix, such as `ssh` or `docker exec`, instead of one provider's sandbox CLI (#1)
+
+### Documentation
+
+- Replaced the **Vercel Sandbox guide** with the provider-neutral remote access guide, and pointed repository links at rkendel1/screen-relay (#1)
 
 ### Contributors
 
 - @joshuasoup
 - @lahfir
+- @rkendel1
 
 <!-- release:end -->
 
