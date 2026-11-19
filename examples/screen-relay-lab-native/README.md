@@ -24,8 +24,8 @@ What the app itself contains is its own logic: the fixture check (`feltkit/lab.t
 
 ## Run it
 
-This needs FeltKit with `feltkit({ providers })`, `@appport/core` with providers, and `@appport/screen-relay` with
-its provider export. None is published yet. Install local builds with `npm install --no-save <tarballs>`.
+This needs `@feltdb/feltkit` 0.3.34 or later, `@appport/core` 1.9 or later, and `@appport/screen-relay` 0.2.0 or
+later, which add provider composition. `npm install` installs them once they are published.
 
 ```bash
 screen-relay up -d

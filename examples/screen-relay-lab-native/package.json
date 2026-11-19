@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@appport/screen-relay": "^0.1.2",
-    "@feltdb/feltkit": "^0.3.32",
+    "@appport/screen-relay": "^0.2.0",
+    "@feltdb/feltkit": "^0.3.34",
     "pngjs": "7.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"

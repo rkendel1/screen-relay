@@ -1,6 +1,6 @@
 {
   "name": "@appport/screen-relay",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Stream a desktop to a browser and control it from a CLI and a Node SDK.",
   "license": "Apache-2.0",
   "repository": {
@@ -47,10 +47,10 @@
     "typecheck": "tsc -p ."
   },
   "devDependencies": {
-    "@appport/authorization": "1.2.0",
-    "@appport/core": "1.8.0",
-    "@appport/protocol": "1.5.0",
-    "@appport/schema": "1.1.6",
+    "@appport/authorization": "1.2.1",
+    "@appport/core": "1.9.0",
+    "@appport/protocol": "1.6.0",
+    "@appport/schema": "1.2.0",
     "@types/node": "26.6.6",
     "agent-browser": "0.42.0",
     "esbuild": "0.28.2",
@@ -61,9 +61,9 @@
     "yaml": "2.9.1"
   },
   "peerDependencies": {
-    "@appport/core": "^1.8.0",
-    "@appport/protocol": "^1.5.0",
-    "@appport/schema": "^1.1.6"
+    "@appport/core": "^1.9.0",
+    "@appport/protocol": "^1.6.0",
+    "@appport/schema": "^1.2.0"
   },
   "peerDependenciesMeta": {
     "@appport/core": {
