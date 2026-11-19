@@ -1,12 +1,60 @@
 import { AppPortError } from '@appport/protocol';
 import { s } from '@appport/schema';
-import { defineProvider, effectFailed, providerCapability, type ProviderCallContext } from '@appport/core';
+import { connect as tcpConnect } from 'node:net';
+import { connect as tlsConnect } from 'node:tls';
+import type { IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
+import { defineProvider, effectFailed, providerCapability, type ChannelConnection, type OpenedChannel, type ProviderCallContext } from '@appport/core';
 import { createClient, RelayError, type Capabilities, type Client } from '../sdk/index.js';
 
 /** The provider's state: one SDK client for the configured engine. */
 export interface DesktopRuntime {
   readonly url: string;
   readonly client: Client;
+}
+
+/** A WebSocket upgrade a Node host accepted on the stream channel, after redeeming its grant. */
+export interface NodeUpgrade {
+  readonly kind: 'node-upgrade';
+  readonly request: IncomingMessage;
+  readonly socket: Duplex;
+  readonly head: Buffer;
+}
+
+/**
+ * Relays a redeemed stream connection to the engine. The engine connection is opened here, server side, with the
+ * engine token when there is one: the browser never reaches the engine, so its grant decides what it gets. A grant
+ * without the control scope always reaches `/stream?view=1`, whatever the engine's own tickets allow.
+ */
+function relay(url: string, token: string | undefined, connection: ChannelConnection): void {
+  const transport = connection.transport as NodeUpgrade;
+  if (transport?.kind !== 'node-upgrade') throw new Error('The stream channel needs a Node WebSocket upgrade');
+  const { request, socket, head } = transport;
+  const key = request.headers['sec-websocket-key'];
+  const refuse = (status: string) => { socket.end(`HTTP/1.1 ${status}\r\nConnection: close\r\n\r\n`); };
+  if (typeof key !== 'string' || request.headers['sec-websocket-version'] !== '13') return refuse('400 Bad Request');
+  const engine = new URL(url);
+  const control = connection.grant.scope.includes('control');
+  const port = Number(engine.port || (engine.protocol === 'https:' ? 443 : 80));
+  const upstream = engine.protocol === 'https:' ? tlsConnect({ host: engine.hostname, port, servername: engine.hostname }) : tcpConnect({ host: engine.hostname, port });
+  upstream.once('error', () => refuse('502 Bad Gateway'));
+  upstream.once(engine.protocol === 'https:' ? 'secureConnect' : 'connect', () => {
+    upstream.write([
+      `GET ${control ? '/stream' : '/stream?view=1'} HTTP/1.1`,
+      `Host: ${engine.host}`,
+      'Upgrade: websocket',
+      'Connection: Upgrade',
+      `Sec-WebSocket-Key: ${key}`,
+      'Sec-WebSocket-Version: 13',
+      `Sec-WebSocket-Protocol: nsl1${token ? `, bearer.${token}` : ''}`,
+      '', '',
+    ].join('\r\n'));
+    if (head.length) upstream.write(head);
+    socket.pipe(upstream).pipe(socket);
+  });
+  socket.once('error', () => upstream.destroy());
+  socket.once('close', () => upstream.destroy());
+  upstream.once('close', () => socket.destroy());
 }
 
 type Context = ProviderCallContext<DesktopRuntime>;
@@ -68,12 +116,14 @@ export const screenRelayProvider = defineProvider<{ url?: string; timeoutMs?: nu
   description: 'Observe and operate a desktop through a running Screen Relay engine.',
   configuration: Config,
   credentials: [{ id: 'engine-token', description: 'The engine session token, for an engine that is not on loopback.', required: false }],
+  channels: [{ name: 'stream', protocol: 'nsl1', purpose: 'desktop.stream', scopes: ['view', 'control'], description: 'The desktop as H.264 over NSL1. A view grant watches; a control grant also sends input.' }],
   async start({ config, credential }) {
     const url = new URL(config.url ?? 'http://127.0.0.1:8080').origin;
     const token = (await credential('engine-token')) ?? undefined;
     const client = createClient({ url, ...(token ? { token } : {}), timeout: config.timeoutMs ?? 15_000 });
     return {
       runtime: { url, client },
+      accept: (connection: ChannelConnection) => relay(url, token, connection),
       async health() {
         try {
           await client.capabilities();
@@ -85,6 +135,24 @@ export const screenRelayProvider = defineProvider<{ url?: string; timeoutMs?: nu
     };
   },
   capabilities: [
+    providerCapability<DesktopRuntime, Record<string, never>, OpenedChannel>({
+      name: 'desktop.stream.view',
+      version: 1,
+      description: 'Opens the desktop stream to watch: where to connect, and a single-use grant that cannot take input.',
+      input: s.object({}),
+      output: s.object({ channel: s.channel(), grant: s.accessGrant() }),
+      authorization: ['desktop.view'],
+      handler: (_input, context) => context.channels.open('stream', { scope: ['view'] }),
+    }),
+    providerCapability<DesktopRuntime, Record<string, never>, OpenedChannel>({
+      name: 'desktop.stream.control',
+      version: 1,
+      description: 'Opens the desktop stream with input: a single-use grant for the controlling connection.',
+      input: s.object({}),
+      output: s.object({ channel: s.channel(), grant: s.accessGrant() }),
+      authorization: ['desktop.control'],
+      handler: (_input, context) => context.channels.open('stream', { scope: ['view', 'control'] }),
+    }),
     providerCapability<DesktopRuntime, Record<string, never>, { backend: string; width: number; height: number; fps: number; keyboard: boolean; pointer: boolean }>({
       name: 'desktop.display.describe',
       version: 1,
