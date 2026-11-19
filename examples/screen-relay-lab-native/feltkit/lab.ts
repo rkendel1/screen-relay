@@ -3,7 +3,7 @@
  * are the Screen Relay provider's capabilities (desktop.*), which FeltKit authorizes and records; this module only
  * decides what to do with them.
  */
-import { s, type ActionCtx } from "@feltdb/feltkit";
+import { fail, s, type ActionCtx } from "@feltdb/feltkit";
 import { app, runs, screenshots } from "./app.js";
 import { api } from "./_generated/api.js";
 import { FIXTURE, fixtureState } from "./_fixture.js";
@@ -26,13 +26,15 @@ export const history = app.query({
   handler: (ctx) => runs.history(ctx, "fixture", "fixture"),
 });
 
-/** Keeps a screenshot as evidence. Takes the image base64-encoded because an action cannot store a file itself. */
+/** Keeps a stored screenshot as evidence, after checking the file is the caller's own screenshot. */
 export const keepScreenshot = app.mutation({
   access: "lab.write",
-  args: { label: s.string({ minLength: 1, maxLength: 80 }), png: s.string(), width: s.number(), height: s.number() },
-  handler: async (ctx, { label, png, width, height }) => {
-    const file = await ctx.services.files.upload({ name: `${label}.png`, contentType: "image/png", content: new Uint8Array(Buffer.from(png, "base64")), metadata: { kind: "screenshot" } });
-    return ctx.db.insert(screenshots, { fileId: file.id, label, width, height, bytes: file.size, ...(file.checksum ? { checksum: file.checksum } : {}), capturedAt: Date.now(), capturedBy: ctx.auth.requirePrincipal().id });
+  args: { label: s.string({ minLength: 1, maxLength: 80 }), fileId: s.string(), width: s.number(), height: s.number() },
+  handler: async (ctx, { label, fileId, width, height }) => {
+    const by = ctx.auth.requirePrincipal().id;
+    const file = await ctx.services.files.get(fileId);
+    if (file.owner !== by || file.metadata.kind !== "screenshot") fail("FAILED_PRECONDITION", "That file is not a screenshot you captured.");
+    return ctx.db.insert(screenshots, { fileId, label, width, height, bytes: file.size, ...(file.checksum ? { checksum: file.checksum } : {}), capturedAt: Date.now(), capturedBy: by });
   },
 });
 
@@ -44,8 +46,10 @@ export const recordRun = app.mutation({
 
 async function capture(ctx: ActionCtx, label: string): Promise<{ id: string; png: Uint8Array }> {
   const shot = (await ctx.integrations.invoke("desktop.screenshot.capture", {})) as Shot;
-  const id = await ctx.runMutation(api.lab.keepScreenshot, { label, png: shot.data, width: shot.width, height: shot.height });
-  return { id, png: new Uint8Array(Buffer.from(shot.data, "base64")) };
+  const png = new Uint8Array(Buffer.from(shot.data, "base64"));
+  const file = await ctx.services.files.upload({ name: `${label}.png`, contentType: "image/png", content: png, metadata: { kind: "screenshot" } });
+  const id = await ctx.runMutation(api.lab.keepScreenshot, { label, fileId: file.id, width: shot.width, height: shot.height });
+  return { id, png };
 }
 
 /** Captures the screen and keeps it. */

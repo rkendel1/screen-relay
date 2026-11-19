@@ -55,13 +55,69 @@ What moved out of the application: the provider module and record mutations (int
 | --- | --- | --- | --- | --- |
 | FK-8 | P1 | FeltKit platform gap | The browser client could call functions but not an AppPort capability by name; in cookie mode it holds no token for `/appport` | Fixed: `client.invoke`, `POST /api/capability/<name>` |
 | FK-9 | P2 | FeltKit platform gap | An app with no collections of its own cannot start (FeltDB needs one), even when providers do all its work | Open; documented in `docs/PROVIDERS.md` |
-| FK-10 | P3 | FeltKit platform gap | `feltkit build` and `feltkit dev` report "0 capabilities" for an app whose capabilities come from providers; `/appport/manifest` lists them | Open |
+| FK-10 | P3 | FeltKit platform gap | `feltkit build` and `feltkit dev` reported "0 capabilities" for an app whose capabilities come from providers | Fixed (rkendel1/feltkit#148) |
 | FK-11 | P2 | FeltKit platform gap | Functions cannot read provider call records (`_feltkit_provider_calls`); only Studio and inspect can | Open |
-| FK-12 | P2 | FeltKit platform gap | An app that declares a provider cannot build for AppBoundry, which cannot run provider code | Open by design; documented |
+| FK-12 | P0 | Cross-layer gap | An app that declares a provider cannot build for AppBoundry | FeltKit side fixed (rkendel1/feltkit#148); AppBoundry host side open |
 | AP-4 | P1 | AppPort package gap | Core dispatched an in-process request without a `requestId`, so two external effects recorded under the same key | Fixed: `begin()` refuses an unattributable effect |
 | AP-5 | P2 | AppPort package gap | `effectFailed` crossed copies of `@appport/core` only by `instanceof` | Fixed: a registry symbol |
 
 Status of the original register: SR-1, SR-2, SR-5, AP-1, FK-1, FK-2, FK-5, FK-6 are done. SR-3 (engine ticket scopes) is designed, not implemented: the provider relay already enforces view and control at the boundary, and engine scopes remain defense in depth. SR-4, FK-3, FK-4, FK-7, AP-2, AP-3 are open.
+
+### Pre-release closeout (2026-11-19)
+
+The first implementation was merged as rkendel1/appport#294, rkendel1/feltkit#147, and rkendel1/screen-relay#5. The closeout PRs carry what those did not:
+
+| PR | Contents |
+| --- | --- |
+| rkendel1/appport#295 | Provider channels (`f4b4d75`). FeltKit's and Screen Relay's `main` already import it, so it merges first |
+| rkendel1/feltkit#148 | FK-12 (FeltKit side), FK-4, FK-10 (`e9e3724`) |
+| rkendel1/screen-relay (this branch) | The native lab on the final declaration; this closeout |
+
+| Finding | Status | Release impact |
+| --- | --- | --- |
+| FK-12 | FeltKit side fixed: providers are declared by module (`{ module, export?, config?, credentials? }`), never imported into the app's definition, and an AppBoundry build refuses them by name. Running providers in an AppBoundry deployment needs the AppBoundry host to run provider code beside the guest; the published host (`@appport/appboundry` 1.13.0) implements no companion execution, not even `components@1` | Blocks providers on AppBoundry only. Shipping them as FeltKit-server-only, as actions are, is the release owner's decision |
+| FK-4 | Fixed: `ctx.services.files` in actions, and actions bound for service authorization. The lab's base64 handoff is gone | None |
+| FK-10 | Fixed: dev banner, build summary, Studio count provider capabilities (the lab reports 6) | None |
+| FK-9 | Open: an app needs one collection of its own. Every provider app that keeps evidence has one | Track |
+| FK-11 | Open: functions cannot read `_feltkit_provider_calls`. Studio and inspect can; applications keep their own business evidence, as the lab does | Track |
+| SR-3 | Open, defense in depth | None (see below) |
+
+**SR-3 and the browser path.** In a composed application the browser's only way to the desktop is the provider relay: the app publishes no engine URL or token, `desktop.stream.view` issues a view-scoped grant redeemed at `/_provider/<name>/stream`, and the relay opens `/stream?view=1` server side for it, so a view grant cannot take input whatever the engine's tickets allow (tested against a real engine). The engine's own viewer on loopback is a separate, unchanged path for a person on the desktop machine, and an engine with a token refuses any browser without one. Engine ticket scopes would harden direct custom clients; they do not gate the composed path.
+
+### Release matrix
+
+Every version below is free on npm (each package's workspace version equals its highest published version). Nothing has been bumped.
+
+**1. AppPort** (one release of all 18 packages with exact internal pins, `PUBLISHING.md`):
+
+| Package | Now | Recommended | Why |
+| --- | --- | --- | --- |
+| `@appport/protocol` | 1.5.0 | 1.6.0 | Additive: `ChannelRef`, `AccessGrantToken` |
+| `@appport/schema` | 1.1.6 | 1.2.0 | Additive: `s.channel()`, `s.accessGrant()` |
+| `@appport/core` | 1.8.0 | 1.9.0 | Additive: access grants, providers, channels |
+| `@appport/testing` | 1.2.6 | 1.3.0 | Additive: `runAccessGrantStoreConformance` |
+| `@appport/authorization` | 1.2.0 | 1.2.1 | Re-pin only |
+| `@appport/client` | 1.1.8 | 1.1.9 | Re-pin only |
+| `@appport/contract-builder` | 1.1.6 | 1.1.7 | Re-pin only |
+| `@appport/generators` | 1.0.10 | 1.0.11 | Re-pin only |
+| `@appport/integration` | 1.2.5 | 1.2.6 | Re-pin only |
+| `@appport/mcp` | 1.3.9 | 1.3.10 | Re-pin only |
+| `@appport/mobile` | 1.0.12 | 1.0.13 | Re-pin only |
+| `@appport/sdk` | 1.9.0 | 1.9.1 | Re-pin only |
+| `@appport/server` | 1.3.3 | 1.3.4 | Re-pin only |
+| `@appport/transport-electron` | 1.0.16 | 1.0.17 | Re-pin only |
+| `@appport/transport-http` | 1.1.8 | 1.1.9 | Re-pin only |
+| `@appport/transport-inprocess` | 1.0.16 | 1.0.17 | Re-pin only |
+| `@appport/transport-tauri` | 1.0.12 | 1.0.13 | Re-pin only |
+| `@appport/transport-websocket` | 1.0.12 | 1.0.13 | Re-pin only |
+
+Gates on the branch: build, full suite, `boundary:check`, `release:check` (18 tarballs), `release:verify-install` pass. `RELEASE_NOTES.md` needs the release set entry.
+
+**2. FeltKit** `@feltdb/feltkit` and `create-feltkit`: 0.3.32 is `latest` and 0.3.33 is published under `pending`, so the next free version in its patch-release practice is **0.3.34**. A minor (0.4.0) would also be defensible for a new public option; it is the maintainer's call. Its `@appport/*` dependencies are exact pins: `@appport/core` 1.8.0 → 1.9.0, `@appport/protocol` 1.5.0 → 1.6.0, `@appport/schema` 1.1.6 → 1.2.0, `@appport/authorization` 1.2.0 → 1.2.1, `@appport/integration` 1.2.5 → 1.2.6, `@appport/sdk` 1.9.0 → 1.9.1, `@appport/server` 1.3.3 → 1.3.4 (dev: `@appport/testing` 1.2.6 → 1.3.0), so it never installs a second copy of core beside a provider's.
+
+**3. Screen Relay** `@appport/screen-relay`: never published. Recommended **0.2.0**, not 0.1.2: the package now adds the `./provider` and `./viewer` exports, and the merged 0.1.2 changelog entry says "this release adds no AppPort capabilities yet", which is no longer true; the release PR rewrites it under this repository's release process. Optional peer ranges become `@appport/core` `^1.9.0`, `@appport/protocol` `^1.6.0`, `@appport/schema` `^1.2.0` (dev dependencies to the same exact versions). The `screen-relay` npm name remains upstream's.
+
+**Merge and publish order:** appport#295 → publish AppPort → FeltKit pins, CI green, merge feltkit#148 → publish FeltKit → Screen Relay ranges, CI green → publish → clean consumer test from npm in a fresh FeltKit app.
 
 ### Release order and remaining blockers
 

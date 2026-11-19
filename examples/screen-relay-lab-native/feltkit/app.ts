@@ -3,7 +3,6 @@
  * authorized by its roles. The application keeps only its own evidence: screenshots and fixture runs.
  */
 import { feltkit, s } from "@feltdb/feltkit";
-import { screenRelayProvider } from "@appport/screen-relay/provider";
 
 export const app = feltkit({
   name: "screen-relay-lab-native",
@@ -20,7 +19,7 @@ export const app = feltkit({
   },
   services: { files: true },
   providers: {
-    desktop: { provider: screenRelayProvider, config: { url: process.env.SCREEN_RELAY_URL ?? "http://127.0.0.1:8080" } },
+    desktop: { module: "@appport/screen-relay/provider", export: "screenRelayProvider", config: { url: process.env.SCREEN_RELAY_URL ?? "http://127.0.0.1:8080" } },
   },
 });
 
