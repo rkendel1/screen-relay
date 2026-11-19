@@ -25,7 +25,7 @@ Decisions G-1 (grants in existing AppPort packages) and G-2 (declarative provide
 
 | Repository | Baseline | Branch |
 | --- | --- | --- |
-| `rkendel1/appport` (vitest, all packages) | 1,955 passed, 1 skipped (audit snapshot updated for the new files) | 1,972 passed, 1 skipped; boundary check passes |
+| `rkendel1/appport` (vitest, all packages) | Full suite not run on a clean checkout; protocol, core, and testing at `ab6e49d`: 712 passed | 1,972 passed, 1 skipped; boundary check passes |
 | `rkendel1/feltkit` (`npm test`, node and conformance) | 848 tests: 836 passed, 0 failed, 3 skipped (clean worktree at `0662d20`) | 856 tests: 844 passed, 0 failed, 3 skipped; `npm run typecheck` passes |
 | `rkendel1/screen-relay` (`npm test`) | 151 passed, 11 skipped | 158 passed, 13 skipped (the 2 live tests run with `RELAY_LIVE=1` and pass) |
 
