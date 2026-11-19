@@ -67,14 +67,14 @@ screen-relay creates a 64-character lowercase hex token (256 random bits) whenev
 - `screen-relay status` hides the token unless you pass `--show-token`.
 - The viewer reads `#token=` from the link that `up` prints, removes it from the address bar, and uses it only on `https://` or loopback pages. Browsers never send the fragment to the server.
 - Each `screen-relay up` creates a new token and ends open connections. To rotate a token, run `screen-relay down`, then `screen-relay up`.
-- To give a custom client access that works only once, request a ticket with `POST /tickets` and the token. The client opens its WebSocket with the `ticket.TICKET` subprotocol instead of the token, and the ticket stops working after that connection or after 60 seconds. The bundled viewer doesn't accept tickets yet; it still needs the `#token=` link. See the [protocol](https://github.com/vercel-labs/screen-relay/blob/main/PROTOCOL.md).
+- To give a custom client access that works only once, request a ticket with `POST /tickets` and the token. The client opens its WebSocket with the `ticket.TICKET` subprotocol instead of the token, and the ticket stops working after that connection or after 60 seconds. The bundled viewer doesn't accept tickets yet; it still needs the `#token=` link. See the [protocol](https://github.com/rkendel1/screen-relay/blob/main/PROTOCOL.md).
 
 ## Control a session from your laptop
 
 1. On your laptop, install the CLI. It needs Node 22 or newer and runs on any OS:
 
    ```sh
-   npm install -g screen-relay
+   npm install -g @appport/screen-relay
    ```
 
 2. On the VM, run `screen-relay status --show-token`, and copy the token into a file named `token` on your laptop.

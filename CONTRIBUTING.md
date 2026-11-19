@@ -14,7 +14,7 @@ For the wire format, see [screen-relay wire protocol](PROTOCOL.md).
 | `src/engine/backends/linux/wayland/` | Wayland capture (wlr-screencopy), virtual keyboard and pointer input, Unicode keymap |
 | `src/engine/backends/windows/` | Windows capture (Desktop Duplication, shared per display, mipmap downscaling) and SendInput input primitives |
 | `src/engine/backends/macos/` | macOS capture (ScreenCaptureKit, shared per display), CGEvent input primitives, and display and permission checks |
-| `src/protocol/` | Runtime-neutral wire constants, input encoding, server message parsing, socket targets, HID key table, key-combo and text parsing, origin and token rules. Built without Node imports and exported as `screen-relay/protocol`. |
+| `src/protocol/` | Runtime-neutral wire constants, input encoding, server message parsing, socket targets, HID key table, key-combo and text parsing, origin and token rules. Built without Node imports and exported as `@appport/screen-relay/protocol`. |
 | `src/sdk/` | Node client library on top of the protocol |
 | `src/cli/` | The `screen-relay` CLI: argument parsing, output, client commands on the SDK, host commands that supervise the display, desktop, and engine |
 | `viewer/` | Browser viewer source: `index.html` and `main.ts`; the build bundles it into `dist/viewer/viewer.js` |
@@ -114,7 +114,7 @@ Color: little-endian BGRA and big-endian ARGB convert to NV12 with limited-range
 
 ## How install works
 
-`npm install -g screen-relay` installs the package, which ships `dist/`, `skills/`, `packages.tsv`, `Makefile`, and `src/engine/`. Installing the package runs no install script.
+`npm install -g @appport/screen-relay` installs the package, which ships `dist/`, `skills/`, `packages.tsv`, `Makefile`, and `src/engine/`. Installing the package runs no install script.
 
 `screen-relay install` reads `packages.tsv` to pick the system packages for the machine's package manager. It then builds the engine with the package's `Makefile`, the same one a checkout uses, and stores the result in `~/.local/share/screen-relay/engine/<version>/`. `$XDG_DATA_HOME` is honored. The first `screen-relay up` on a machine runs the same setup.
 
@@ -125,7 +125,7 @@ To try a local change end to end, build and pack the package, install the tarbal
 ```sh
 npm run build
 npm pack
-npm install -g ./screen-relay-<version>.tgz
+npm install -g ./appport-screen-relay-<version>.tgz
 screen-relay install
 screen-relay up -d
 ```

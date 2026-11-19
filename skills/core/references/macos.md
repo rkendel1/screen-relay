@@ -5,7 +5,7 @@ On macOS, `screen-relay up -d` streams the logged-in user's display. It starts n
 ## Install
 
 ```sh
-npm install -g screen-relay
+npm install -g @appport/screen-relay
 screen-relay install --yes
 ```
 

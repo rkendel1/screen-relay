@@ -18,7 +18,7 @@ screen-relay skills get core --full
 Load specialized guidance when needed:
 
 ```sh
-screen-relay skills get vercel-sandbox
+screen-relay skills get remote-host
 ```
 
 List available skills with `screen-relay skills list`.

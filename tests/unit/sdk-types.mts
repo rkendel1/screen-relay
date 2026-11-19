@@ -1,5 +1,5 @@
 // Compile-only consumer: this never connects to a desktop.
-import { connect, screenshot, capabilities, RelayError } from 'screen-relay';
+import { connect, screenshot, capabilities, RelayError } from '@appport/screen-relay';
 
 const checkTypes = async () => {
   const desktop = await connect({ url: 'http://127.0.0.1:18094', timeout: 5000 });
