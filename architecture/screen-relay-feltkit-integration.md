@@ -86,11 +86,11 @@ The first implementation was merged as rkendel1/appport#294, rkendel1/feltkit#14
 
 ### Release matrix
 
-Every version below is free on npm (each package's workspace version equals its highest published version). Nothing has been bumped.
+Every version below is free on npm. All three releases are now prepared on their branches (versions bumped, pins and ranges set, changelogs written), and none is published.
 
 **1. AppPort** (one release of all 18 packages with exact internal pins, `PUBLISHING.md`):
 
-| Package | Now | Recommended | Why |
+| Package | Published | Prepared | Why |
 | --- | --- | --- | --- |
 | `@appport/protocol` | 1.5.0 | 1.6.0 | Additive: `ChannelRef`, `AccessGrantToken` |
 | `@appport/schema` | 1.1.6 | 1.2.0 | Additive: `s.channel()`, `s.accessGrant()` |
@@ -103,7 +103,7 @@ Every version below is free on npm (each package's workspace version equals its 
 | `@appport/integration` | 1.2.5 | 1.2.6 | Re-pin only |
 | `@appport/mcp` | 1.3.9 | 1.3.10 | Re-pin only |
 | `@appport/mobile` | 1.0.12 | 1.0.13 | Re-pin only |
-| `@appport/sdk` | 1.9.0 | 1.9.1 | Re-pin only |
+| `@appport/sdk` | 1.9.0 | 1.10.0 | Additive: re-exports `ChannelRef`, `AccessGrantToken` and their guards |
 | `@appport/server` | 1.3.3 | 1.3.4 | Re-pin only |
 | `@appport/transport-electron` | 1.0.16 | 1.0.17 | Re-pin only |
 | `@appport/transport-http` | 1.1.8 | 1.1.9 | Re-pin only |
@@ -111,21 +111,26 @@ Every version below is free on npm (each package's workspace version equals its 
 | `@appport/transport-tauri` | 1.0.12 | 1.0.13 | Re-pin only |
 | `@appport/transport-websocket` | 1.0.12 | 1.0.13 | Re-pin only |
 
-Gates on the branch: build, full suite, `boundary:check`, `release:check` (18 tarballs), `release:verify-install` pass. `RELEASE_NOTES.md` needs the release set entry.
+Prepared in appport#295 (`57b620a`): `@appport/core` exports providers and access grants from its public entry, and `RELEASE_NOTES.md` has the release set entry. Gates: build, full suite (1,972 tests), `boundary:check`, audit, `release:check` (18 tarballs), `release:verify-install`, and `release:pack` pass; publishing all 18 to a local registry and `release:verify-registry` against it pass.
 
-**2. FeltKit** `@feltdb/feltkit` and `create-feltkit`: 0.3.32 is `latest` and 0.3.33 is published under `pending`, so the next free version in its patch-release practice is **0.3.34**. A minor (0.4.0) would also be defensible for a new public option; it is the maintainer's call. Its `@appport/*` dependencies are exact pins: `@appport/core` 1.8.0 → 1.9.0, `@appport/protocol` 1.5.0 → 1.6.0, `@appport/schema` 1.1.6 → 1.2.0, `@appport/authorization` 1.2.0 → 1.2.1, `@appport/integration` 1.2.5 → 1.2.6, `@appport/sdk` 1.9.0 → 1.9.1, `@appport/server` 1.3.3 → 1.3.4 (dev: `@appport/testing` 1.2.6 → 1.3.0), so it never installs a second copy of core beside a provider's.
+**2. FeltKit** `@feltdb/feltkit` and `create-feltkit`: 0.3.32 is `latest` and 0.3.33 is published under `pending`, so the next free version in its patch-release practice is **0.3.34**. A minor (0.4.0) would also be defensible for a new public option; it is the maintainer's call. Its `@appport/*` dependencies are exact pins: `@appport/core` 1.8.0 → 1.9.0, `@appport/protocol` 1.5.0 → 1.6.0, `@appport/schema` 1.1.6 → 1.2.0, `@appport/authorization` 1.2.0 → 1.2.1, `@appport/integration` 1.2.5 → 1.2.6, `@appport/sdk` 1.9.0 → 1.10.0, `@appport/server` 1.3.3 → 1.3.4 (dev: `@appport/testing` 1.2.6 → 1.3.0), so it never installs a second copy of core beside a provider's. Prepared in feltkit#148 (`fd8d6f8`) as the publish script writes it. Against the local registry: build and examples pass; the full suite passes except the single-copy test (below), plus one timing failure under full-suite load that passes alone and in three full-file runs.
 
-**3. Screen Relay** `@appport/screen-relay`: never published. Recommended **0.2.0**, not 0.1.2: the package now adds the `./provider` and `./viewer` exports, and the merged 0.1.2 changelog entry says "this release adds no AppPort capabilities yet", which is no longer true; the release PR rewrites it under this repository's release process. Optional peer ranges become `@appport/core` `^1.9.0`, `@appport/protocol` `^1.6.0`, `@appport/schema` `^1.2.0` (dev dependencies to the same exact versions). The `screen-relay` npm name remains upstream's.
+**AuthBoundry must release against AppPort 1.9 before FeltKit can publish.** `@authboundry/core` 1.20.0 (through FeltKit's dev and optional peer `@authboundry/local`) pins `@appport/core` 1.8.0 exactly, so a second AppPort copy stays in FeltKit's tree. FeltKit's single-copy test and `test:release` both fail on it, and `test:release` refuses a root override ("align the dependency upstream"). AuthBoundry tracks AppPort this way: 1.19.0 pinned `@appport/core` 1.8.0 the day 1.8.0 shipped. A consumer app without `@authboundry/local` installs one copy of each (verified below).
 
-**Merge and publish order:** appport#295 → publish AppPort → FeltKit pins, CI green, merge feltkit#148 → publish FeltKit → Screen Relay ranges, CI green → publish → clean consumer test from npm in a fresh FeltKit app.
+**3. Screen Relay** `@appport/screen-relay`: never published. Prepared as **0.2.0** in screen-relay#6 (`0681a95`): the package adds the `./provider` and `./viewer` exports. The 0.1.2 entry is restored to what upstream `screen-relay@0.1.2` shipped, and the rename and #1 changes, which never shipped, move to 0.2.0. Typecheck and tests (158 pass, 13 skipped) and the version sync check pass; the provider bundle imports AppPort as a peer, so it shares the host's single instance. Optional peer ranges become `@appport/core` `^1.9.0`, `@appport/protocol` `^1.6.0`, `@appport/schema` `^1.2.0` (dev dependencies to the same exact versions). The `screen-relay` npm name remains upstream's.
+
+**Merge and publish order:** appport#295 → publish AppPort → AuthBoundry release pinning `@appport/core` 1.9.0 → FeltKit `npm install` (refresh the lockfile from npm, commit if it changed), CI green, merge feltkit#148 → publish FeltKit → screen-relay#6 CI green, merge → publish → clean consumer test from npm in a fresh FeltKit app.
+
+**Consumer rehearsal (local registry, no tarballs or links):** `npm create feltkit@0.3.34`, then `npm install @appport/screen-relay`, installs one copy each of `@appport/core` 1.9.0, `@appport/protocol` 1.6.0, `@appport/schema` 1.2.0. The native lab installed the same way passes `LAB_LIVE=1 npm test` against the real desktop (authorization, honest engine-down failure, fixture ready → success, evidence after restart), and `feltkit build --target appboundry` refuses its provider by name.
 
 ### Release order and remaining blockers
 
-1. AppPort publishes `@appport/protocol`, `@appport/schema`, `@appport/core`, and `@appport/testing` with these changes. Until then, Screen Relay's CI typecheck fails (it installs the published `@appport/core` 1.8.0, which has no `defineProvider`), and FeltKit pins `@appport/core` 1.8.0, which must move to the new version.
-2. FeltKit publishes with `feltkit({ providers })`.
-3. `@appport/screen-relay` publishes with its peer dependency ranges pointing at the released core.
+1. AppPort publishes all 18 packages. Until then, FeltKit's and Screen Relay's CI fail: they install from npm, which does not have the pinned versions.
+2. AuthBoundry releases with `@appport/core` 1.9.0.
+3. FeltKit publishes 0.3.34 with `feltkit({ providers })`.
+4. `@appport/screen-relay` publishes 0.2.0. Its Release workflow uses npm trusted publishing, which must be configured for the package on npmjs.com; if npm still requires the package to exist first, the first publish is manual.
 
-No package was published and no version was changed.
+No package was published to npm.
 
 
 
