@@ -3,8 +3,7 @@
 Desktop streaming and control for humans and AI agents: watch a desktop in a browser, and click, type, and take screenshots from the shell.
 
 <p>
-  <a href="https://vercel.com/labs#active-experiments"><img alt="Vercel Labs Experiment" src="https://img.shields.io/badge/LABS-EXPERIMENT-0a0a0a.svg?style=for-the-badge&amp;logo=Vercel&amp;labelColor=000000" height="28"></a>
-  <a href="https://www.npmjs.com/package/screen-relay"><img alt="npm version: screen-relay" src="https://img.shields.io/npm/v/screen-relay.svg?style=for-the-badge&amp;labelColor=000000" height="28"></a>
+  <a href="https://www.npmjs.com/package/@boundry/screen-relay"><img alt="npm version: @boundry/screen-relay" src="https://img.shields.io/npm/v/@boundry/screen-relay.svg?style=for-the-badge&amp;labelColor=000000" height="28"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/LICENSE-APACHE--2.0-97ca00.svg?style=for-the-badge&amp;labelColor=000000" height="28"></a>
 </p>
 
@@ -13,7 +12,7 @@ screen-relay starts a desktop on a Linux VM, sandbox, or container, or attaches 
 ## Install
 
 ```bash
-npm install -g screen-relay
+npm install -g @boundry/screen-relay
 screen-relay install            # system packages and the engine build (first time only)
 ```
 
@@ -56,7 +55,7 @@ The CLI ships skills that match its version:
 ```bash
 screen-relay skills get core           # the control loop, coordinates, type versus key, and errors
 screen-relay skills get core --full    # adds every reference: CLI, config, SDK, macOS, Wayland, troubleshooting
-screen-relay skills list               # specialized skills, such as vercel-sandbox
+screen-relay skills list               # specialized skills, such as remote-host
 ```
 
 Or add this to your `AGENTS.md`:
@@ -106,7 +105,7 @@ Run the engine tests with `make test`, which also needs the FFmpeg development l
 - [CLI reference](https://screen-relay.dev/docs/cli) and [Configuration](https://screen-relay.dev/docs/configuration)
 - [Node SDK](https://screen-relay.dev/docs/sdk) and [HTTP API](https://screen-relay.dev/docs/protocol)
 - [Remote access](https://screen-relay.dev/docs/remote-access): tokens, TLS, and tunnels
-- [Docker](https://screen-relay.dev/docs/docker) and [Vercel Sandbox](https://screen-relay.dev/docs/vercel-sandbox)
+- [Docker](https://screen-relay.dev/docs/docker)
 - [Changelog](CHANGELOG.md)
 
 ## License

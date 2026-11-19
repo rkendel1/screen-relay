@@ -1,11 +1,10 @@
-import { determineAgent } from '@vercel/detect-agent';
+import { detectAgent } from './agent.js';
 
 export interface OutputOptions { json?: boolean; 'no-color'?: boolean; color?: boolean }
 
-const detection = await determineAgent();
 const override = process.env.SCREEN_RELAY_AGENT;
 
-export const agent = override === '1' ? true : override === '0' ? false : detection.isAgent;
+export const agent = override === '1' ? true : override === '0' ? false : detectAgent();
 
 export function outputMode(args: OutputOptions = {}, stream: NodeJS.WriteStream = process.stderr) {
   const plain = !stream.isTTY || process.env.TERM === 'dumb';

@@ -1,11 +1,11 @@
 {
-  "name": "screen-relay",
+  "name": "@boundry/screen-relay",
   "version": "0.1.2",
   "description": "Stream a desktop to a browser and control it from a CLI and a Node SDK.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel-labs/screen-relay.git"
+    "url": "git+https://github.com/rkendel1/screen-relay.git"
   },
   "type": "module",
   "bin": {
@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "@clack/prompts": "1.9.0",
-    "@vercel/detect-agent": "1.2.7",
     "yaml": "2.9.1"
   }
 }

@@ -170,7 +170,7 @@ function packageWork(groups: string[], args: Args): { manager: string; packages:
 /** Builds the engine from the source in this install in its own scratch directory, then replaces this version's earlier build. */
 async function buildEngine(backends: Backend[], args: Args): Promise<void> {
   if (!existsSync(join(SOURCE, 'src', 'engine'))) {
-    throw new Failure('missing_dependency', 'The engine source is missing from this install', 'Reinstall it with `npm install -g screen-relay`.');
+    throw new Failure('missing_dependency', 'The engine source is missing from this install', 'Reinstall it with `npm install -g @boundry/screen-relay`.');
   }
   const target = engineDirectory();
   mkdirSync(dirname(target), { recursive: true });

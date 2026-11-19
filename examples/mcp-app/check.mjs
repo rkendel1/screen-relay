@@ -7,7 +7,7 @@ import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 const origin = process.env.SCREEN_RELAY_ORIGIN;
-assert(origin, "Set SCREEN_RELAY_ORIGIN to the sandbox HTTPS origin.");
+assert(origin, "Set SCREEN_RELAY_ORIGIN to the screen-relay HTTPS origin.");
 const token = process.env.SCREEN_RELAY_TOKEN ?? (await readFile(process.env.SCREEN_RELAY_TOKEN_FILE, "utf8")).trim();
 assert(/^[0-9a-f]{64}$/.test(token), "Set a valid token without putting it in tool arguments.");
 const client = new Client({ name: "relay-app-check", version: "0.1.0" });

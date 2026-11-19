@@ -10,11 +10,11 @@ A prototype that shows a screen-relay desktop inside an MCP App. The resource em
 | `direct-viewer.ts` | Adapts the built viewer bundle at request time |
 | `direct-ui.js` | Bridges MCP messages to the embedded viewer |
 | `config.ts` | Reads and validates the screen-relay origin and token |
-| `sandbox.ts` | Runs automation commands in the sandbox |
+| `host.ts` | Runs automation commands on the desktop host |
 
 ## Setup
 
-Build screen-relay first (the prototype reads `dist/viewer/` and imports `dist/sdk/index.js`). Run the desktop in a Linux VM or Vercel Sandbox, not on your host display.
+Build screen-relay first (the prototype reads `dist/viewer/` and imports `dist/sdk/index.js`). Run the desktop in a Linux VM, container, or cloud sandbox, not on your host display.
 
 ```sh
 npm run build
@@ -26,7 +26,7 @@ cd examples/mcp-app && npm install
 Set the screen-relay origin. It must match the origin in the URL passed to `open_desktop`.
 
 ```sh
-SCREEN_RELAY_ORIGIN=https://your-sandbox.vercel.run SCREEN_RELAY_TOKEN="$SCREEN_RELAY_TOKEN" npm run start:http
+SCREEN_RELAY_ORIGIN=https://desktop.example.com SCREEN_RELAY_TOKEN="$SCREEN_RELAY_TOKEN" npm run start:http
 ```
 
 The MCP endpoint is `http://localhost:3001/mcp`. Without `--http`, the server uses stdio.
@@ -56,22 +56,33 @@ The adapter changes the built viewer in memory: it takes the token from the tool
 
 ## Desktop and browser tools
 
-Two tools drive the same sandbox the stream comes from. `desktop_action` runs [agent-desktop](https://github.com/vercel-labs/agent-desktop), and `browser_action` runs [agent-browser](https://agent-browser.dev). Each takes an `args` array and returns the command's stdout and stderr.
+Two tools drive the same host the stream comes from. `desktop_action` runs [agent-desktop](https://github.com/vercel-labs/agent-desktop), and `browser_action` runs [agent-browser](https://agent-browser.dev). Each takes an `args` array and returns the command's stdout and stderr.
 
-Set `SCREEN_RELAY_SANDBOX` to the sandbox name, and `SCREEN_RELAY_SANDBOX_SCOPE` when it belongs to a team:
+By default the tools run on the machine that runs this server. When the desktop is elsewhere, set `SCREEN_RELAY_EXEC` to a JSON array that runs a command on the desktop host. The server appends the command and its arguments to it:
 
 ```sh
-SCREEN_RELAY_SANDBOX=relay-hi SCREEN_RELAY_SANDBOX_SCOPE=team_xxx npm run start:http
+SCREEN_RELAY_EXEC='["docker", "exec", "relay", "--"]' npm run start:http
+SCREEN_RELAY_EXEC='["ssh", "user@vm", "--"]' SCREEN_RELAY_EXEC_SHELL=1 npm run start:http
 ```
 
-Install both tools in the sandbox, then copy the wrapper that loads the desktop environment:
+A hosting provider's own exec command works the same way. Set `SCREEN_RELAY_EXEC_SHELL=1` when the prefix passes the command through a shell on the host, as `ssh` does, so that each argument is quoted and a model-supplied argument cannot run as shell syntax.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `SCREEN_RELAY_EXEC` | Empty, run locally | JSON array prefix that runs a command on the desktop host |
+| `SCREEN_RELAY_EXEC_SHELL` | Unset | `1` quotes each argument for a remote shell |
+| `SCREEN_RELAY_ENV_WRAPPER` | `relay-env` | Path of the `relay-env` wrapper on the host |
+| `SCREEN_RELAY_AGENT_BROWSER` | `agent-browser` | Path of agent-browser on the host |
+
+Install both tools on the host, then copy the wrapper that loads the desktop environment:
 
 ```sh
 npm install -g agent-desktop
-~/relay/node_modules/.bin/agent-browser install --with-deps
+npm install -g agent-browser
+agent-browser install --with-deps
 ```
 
-Copy `relay-env` to `/vercel/.local/bin/relay-env` and make it executable. It reads `display`, `xauthority`, and the session D-Bus address from screen-relay's `session.json` before running a command, which is what lets these tools reach the running desktop.
+Copy `relay-env` to a directory on the host's `PATH`, or set `SCREEN_RELAY_ENV_WRAPPER` to its path, and make it executable. It reads `display`, `xauthority`, and the session D-Bus address from screen-relay's `session.json` before running a command, which is what lets these tools reach the running desktop.
 
 It reads the session named by `SCREEN_RELAY_SESSION_NAME`, which defaults to `default`. Set it to the name you gave `screen-relay up --name` to reach a named desktop. The state directory comes from `XDG_STATE_HOME`, or from `$HOME/.local/state` when that is unset. Set `SCREEN_RELAY_STATE` to the full path of a `session.json` to read a file outside that layout. An invalid session name or an unreadable file exits with status 2 and a message on stderr naming the session or the path.
 
@@ -90,8 +101,8 @@ From this directory, with the server environment set:
 node check.mjs
 ```
 
-Alternatively, `SCREEN_RELAY_TOKEN_FILE` can point to the sandbox session's token file for the check. The check reads the resource through MCP, checks that credentials stay out of model-visible results, exercises both UI initialization orders, captures a screenshot, and tests a WebSocket upgrade with a foreign HTTPS Origin. It does not decode video or drive a browser.
+Alternatively, `SCREEN_RELAY_TOKEN_FILE` can point to the session's token file for the check. The check reads the resource through MCP, checks that credentials stay out of model-visible results, exercises both UI initialization orders, captures a screenshot, and tests a WebSocket upgrade with a foreign HTTPS Origin. It does not decode video or drive a browser.
 
-The check passed against a Vercel Sandbox with a 1280×720 screenshot, including after a fresh screen-relay build. In Claude Desktop's Code chat, the resource rendered inline, reported `Live · click to control`, and displayed the sandbox desktop. Its generated frame policy included both configured connection origins. Codex rendered the same resource inline at 1280×720.
+The check passed against a cloud sandbox with a 1280×720 screenshot, including after a fresh screen-relay build. In Claude Desktop's Code chat, the resource rendered inline, reported `Live · click to control`, and displayed the sandbox desktop. Its generated frame policy included both configured connection origins. Codex rendered the same resource inline at 1280×720.
 
 The direct viewer's optional capabilities and metrics fetches are cross-origin and remain subject to the engine's CORS policy. WebSocket streaming does not use that HTTP CORS flow. Mouse and keyboard, fullscreen, and clipboard still need host testing; the viewer source currently has no clipboard integration.

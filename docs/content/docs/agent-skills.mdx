@@ -22,7 +22,7 @@ The `--full` option, which adds reference and template files, is covered in the 
 ```console
 $ screen-relay skills list
 core              Control a screen-relay desktop from an agent using screenshots and input commands.
-vercel-sandbox    Run and control screen-relay inside a Vercel Sandbox.
+remote-host       Run screen-relay on a remote machine, container, or cloud sandbox that publishes a port at an HTTPS URL, and control it from elsewhere.
 ```
 
 An unknown name fails with reason `not_found` and suggests `screen-relay skills list`.
@@ -34,7 +34,7 @@ With `--json`, `list` returns `{"skills":[...]}`, `get` returns `{"skill":{"name
 | Skill | What it covers |
 | --- | --- |
 | `core` | Where each command runs, starting a session, the screenshot and input loop, coordinates, JSON output, and error recovery. Its reference files cover the CLI, config, Wayland, and troubleshooting. |
-| `vercel-sandbox` | Running and controlling screen-relay inside a Vercel Sandbox. |
+| `remote-host` | Running screen-relay on a remote machine, container, or cloud sandbox behind an HTTPS URL, and controlling it from elsewhere. |
 | `screen-relay` | Hidden. Points an agent that finds the skills directory to `screen-relay skills get core`. |
 
 ## Agent-aware help

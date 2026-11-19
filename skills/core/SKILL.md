@@ -11,12 +11,12 @@ screen-relay streams a desktop to a browser viewer and gives you CLI control. Ru
 ## Set up
 
 ```sh
-npm install -g screen-relay
+npm install -g @boundry/screen-relay
 screen-relay install --yes
 screen-relay up -d
 ```
 
-- `npm install -g screen-relay` installs the CLI, the Node SDK, the viewer, the agent skills and the engine source. It runs no install script and installs no system packages. Client commands work at once with `--url` and a token file.
+- `npm install -g @boundry/screen-relay` installs the CLI, the Node SDK, the viewer, the agent skills and the engine source. It runs no install script and installs no system packages. Client commands work at once with `--url` and a token file.
 - `screen-relay install --yes` installs the system packages and builds the engine. On a fresh machine it can take several minutes. Run it with a long command timeout or in the background, and wait for it to exit before `up`. It is safe to repeat. With `--json` it prints nothing until it finishes. A failed step returns one JSON error with the command and the end of its output.
 - `up` runs setup when the machine is not set up. You have no terminal, so pass `--yes`.
 - `install --backend wayland --yes` sets up sway, XWayland and foot. `--desktop none` skips the XFCE packages on x11. `up -d --yes` runs setup and starts the session in one command.
@@ -167,5 +167,5 @@ Keys, defaults, file location and precedence: [config](references/config.md).
 - `references/wayland.md`: Wayland compositors, attach mode and limits.
 - `references/macos.md`: macOS install, permissions, display choice and limits.
 - `references/troubleshooting.md`: symptoms and fixes.
-- `screen-relay skills get vercel-sandbox`: run screen-relay in a Vercel Sandbox.
+- `screen-relay skills get remote-host`: run screen-relay on a remote machine, container, or cloud sandbox behind an HTTPS URL.
 - https://screen-relay.dev/docs: the published documentation.

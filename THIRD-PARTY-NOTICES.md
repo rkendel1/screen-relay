@@ -26,9 +26,9 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ```
 
-### @vercel/detect-agent 1.2.7
+### Agent detection signals
 
-Copyright 2017 Vercel, Inc. Licensed under the Apache License, Version 2.0. The license text is in `LICENSE`.
+The CLI no longer bundles `@vercel/detect-agent`. Its agent detection checks the same environment variables and marker file that `@vercel/detect-agent` 1.2.7 checks. Copyright 2017 Vercel, Inc. Licensed under the Apache License, Version 2.0. The license text is in `LICENSE`.
 
 ### MIT-licensed packages
 

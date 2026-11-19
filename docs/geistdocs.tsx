@@ -29,7 +29,7 @@ export const nav = [
   },
   {
     label: "GitHub",
-    href: "https://github.com/vercel-labs/screen-relay",
+    href: "https://github.com/rkendel1/screen-relay",
   },
 ];
 
@@ -64,7 +64,7 @@ export const agent = {
   links: [
     {
       label: "screen-relay source",
-      href: "https://github.com/vercel-labs/screen-relay",
+      href: "https://github.com/rkendel1/screen-relay",
       description: "Source repository for screen-relay",
     },
   ],

@@ -51,8 +51,8 @@ screen-relay has four layers. Their boundaries are already reasonable, and the e
 | Layer | Source | Runs where | Public contract today |
 | --- | --- | --- | --- |
 | Engine | `src/engine/` (C++): `core/` for capture, encoding, flow control, and input; `backends/` for X11, Wayland, macOS, and Windows; `server/` for HTTP and WebSocket | On the machine that shows the desktop | HTTP and WebSocket on one port, documented in `PROTOCOL.md`: `GET /capabilities`, `GET /screenshot.png`, `POST /input`, `POST /tickets`, `GET /metrics`, WS `/stream`, `/stream?view=1`, `/control`, plus the viewer at `/` |
-| Protocol | `src/protocol/` (TypeScript) | Anywhere | Input record and NSL1 message encoding, error reasons. Exported as `screen-relay/protocol`. |
-| SDK | `src/sdk/` | Anywhere with network access to the engine | `createClient`, `connect`, `capabilities`, `status`, `screenshot`. Exported as `screen-relay`. |
+| Protocol | `src/protocol/` (TypeScript) | Anywhere | Input record and NSL1 message encoding, error reasons. Exported as `@boundry/screen-relay/protocol`. |
+| SDK | `src/sdk/` | Anywhere with network access to the engine | `createClient`, `connect`, `capabilities`, `status`, `screenshot`. Exported as `@boundry/screen-relay`. |
 | CLI host | `src/cli/host/` | On the desktop machine | `install`, `up`, `down`, `status`, `logs`, `run`, `doctor`. Local only: there is no API for session lifecycle or launching apps. |
 | Viewer | `viewer/` | Browser | Speaks NSL1 over `/stream`. Authenticates with the session token from the URL fragment; it does not accept one-time tickets yet (`PROTOCOL.md`). |
 

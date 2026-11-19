@@ -10,7 +10,7 @@ buildSync({ entryPoints: [join(root, 'src/cli/skills.ts')], bundle: true, outfil
 const skills = await import(pathToFileURL(bundle).href);
 
 test('lists visible skills and loads full references', () => {
-  assert.deepEqual(skills.list().map(({ name }) => name), ['core', 'vercel-sandbox']);
+  assert.deepEqual(skills.list().map(({ name }) => name), ['core', 'remote-host']);
   assert.equal(skills.get('screen-relay').name, 'screen-relay');
   assert.equal(skills.path(), join(root, 'skills'));
   const core = skills.get('core', { full: true });

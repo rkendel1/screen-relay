@@ -2,8 +2,8 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { z } from "zod";
 import { createClient } from "../../dist/sdk/index.js";
-import { originOf, tokenOf } from "./config.ts";
-import { runInSandbox } from "./sandbox.ts";
+import { AGENT_BROWSER, originOf, tokenOf } from "./config.ts";
+import { runOnHost } from "./host.ts";
 import { RESOURCE_URI } from "./viewer.ts";
 
 /** Registers the desktop, screenshot, and automation tools on a server. */
@@ -57,18 +57,18 @@ export function registerTools(server: McpServer): void {
         args: z.array(z.string()).describe("Arguments for agent-desktop"),
       }),
     },
-    async ({ args }) => runInSandbox("agent-desktop", args),
+    async ({ args }) => runOnHost("agent-desktop", args),
   );
 
   server.registerTool(
     "browser_action",
     {
       title: "Browser action",
-      description: "Run an agent-browser command inside the screen-relay sandbox, for example [\"open\", \"https://example.com\"].",
+      description: "Run an agent-browser command on the screen-relay desktop host, for example [\"open\", \"https://example.com\"].",
       inputSchema: z.object({
         args: z.array(z.string()).describe("Arguments for agent-browser"),
       }),
     },
-    async ({ args }) => runInSandbox("/vercel/relay/node_modules/.bin/agent-browser", args),
+    async ({ args }) => runOnHost(AGENT_BROWSER, args),
   );
 }
