@@ -34,7 +34,7 @@ export function coordinate(value: number, name: string): number {
   return Math.round(value * 65535);
 }
 
-export function encodeInputRecord(event: InputEvent): Uint8Array {
+export function encodeInputRecord(event: InputEvent): Uint8Array<ArrayBuffer> {
   if (!event || typeof event !== 'object' || !Object.hasOwn(INPUT_TYPES, event.type)) throw new RelayError('invalid_input', 'Unknown input type');
   const bytes = new Uint8Array(INPUT_SIZE);
   const view = new DataView(bytes.buffer);
@@ -67,7 +67,7 @@ export function encodeInputRecord(event: InputEvent): Uint8Array {
   return bytes;
 }
 
-export function encodeInputBatch(events: InputEvent[]): Uint8Array {
+export function encodeInputBatch(events: InputEvent[]): Uint8Array<ArrayBuffer> {
   if (!Array.isArray(events)) throw new RelayError('invalid_input', 'Input must be an array');
   integer(events.length, 1, MAX_INPUT_BATCH, 'input batch length');
   const bytes = new Uint8Array(events.length * INPUT_SIZE);
@@ -91,7 +91,7 @@ export function batches(groups: InputEvent[][], limit = MAX_INPUT_BATCH): InputE
   return result;
 }
 
-export function header(type: number, generation: number, sequence: number, size: number): Uint8Array {
+export function header(type: number, generation: number, sequence: number, size: number): Uint8Array<ArrayBuffer> {
   integer(type, 1, 6, 'message type');
   integer(generation, 1, 0xffffffff, 'generation');
   integer(sequence, 0, 0xffffffff, 'sequence');
@@ -107,14 +107,14 @@ export function header(type: number, generation: number, sequence: number, size:
   return bytes;
 }
 
-export function encodeInput(event: InputEvent, generation: number, sequence: number): Uint8Array {
+export function encodeInput(event: InputEvent, generation: number, sequence: number): Uint8Array<ArrayBuffer> {
   const bytes = header(MESSAGE_TYPES.input, generation, sequence, INPUT_SIZE);
   bytes.set(encodeInputRecord(event), HEADER_SIZE);
   return bytes;
 }
 
 /** Builds an ACK carrying how long the frame waited inside the viewer, in microseconds, saturating at 2^32 - 1. Without a wait it is the 20-byte ACK that engines before the wait field require. */
-export function encodeAck(generation: number, sequence: number, viewerWaitMs?: number): Uint8Array {
+export function encodeAck(generation: number, sequence: number, viewerWaitMs?: number): Uint8Array<ArrayBuffer> {
   if (viewerWaitMs === undefined) return header(MESSAGE_TYPES.ack, generation, sequence, 0);
   const bytes = header(MESSAGE_TYPES.ack, generation, sequence, 4);
   const micros = Number.isFinite(viewerWaitMs) ? Math.min(0xffffffff, Math.max(0, Math.round(viewerWaitMs * 1000))) : 0;

@@ -27,6 +27,14 @@
     "./protocol": {
       "types": "./dist/protocol/index.d.ts",
       "import": "./dist/protocol/index.js"
+    },
+    "./provider": {
+      "types": "./dist/app/provider.d.ts",
+      "import": "./dist/app/provider.js"
+    },
+    "./viewer": {
+      "types": "./dist/stream/attach.d.ts",
+      "import": "./dist/stream/attach.js"
     }
   },
   "engines": {
@@ -39,6 +47,10 @@
     "typecheck": "tsc -p ."
   },
   "devDependencies": {
+    "@appport/authorization": "1.2.0",
+    "@appport/core": "1.8.0",
+    "@appport/protocol": "1.5.0",
+    "@appport/schema": "1.1.6",
     "@types/node": "26.6.6",
     "agent-browser": "0.42.0",
     "esbuild": "0.28.2",
@@ -47,5 +59,21 @@
   "dependencies": {
     "@clack/prompts": "1.9.0",
     "yaml": "2.9.1"
+  },
+  "peerDependencies": {
+    "@appport/core": "^1.8.0",
+    "@appport/protocol": "^1.5.0",
+    "@appport/schema": "^1.1.6"
+  },
+  "peerDependenciesMeta": {
+    "@appport/core": {
+      "optional": true
+    },
+    "@appport/protocol": {
+      "optional": true
+    },
+    "@appport/schema": {
+      "optional": true
+    }
   }
 }

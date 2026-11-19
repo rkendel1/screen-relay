@@ -8,9 +8,11 @@ const entries = [
   { entry: 'src/cli/main.ts', outfile: 'dist/cli/relay.mjs' },
   { entry: 'src/sdk/index.ts', outfile: 'dist/sdk/index.js' },
   { entry: 'src/protocol/index.ts', outfile: 'dist/protocol/index.js', neutral: true },
+  { entry: 'src/app/provider.ts', outfile: 'dist/app/provider.js', external: ['@appport/*'] },
+  { entry: 'src/stream/attach.ts', outfile: 'dist/stream/attach.js', neutral: true },
 ];
 
-await Promise.all(entries.map(async ({ entry, outfile, neutral }) => {
+await Promise.all(entries.map(async ({ entry, outfile, neutral, external = [] }) => {
   await build({
     entryPoints: [entry],
     outfile,
@@ -21,6 +23,7 @@ await Promise.all(entries.map(async ({ entry, outfile, neutral }) => {
     define: { __RELAY_VERSION__: JSON.stringify(version) },
     banner: neutral ? {} : { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
     packages: 'bundle',
+    external,
   });
   await chmod(outfile, 0o755);
 }));
