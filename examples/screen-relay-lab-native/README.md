@@ -6,7 +6,7 @@ The Screen Relay Lab, rebuilt with Screen Relay as an AppPort provider that Felt
 ```ts
 // feltkit/app.ts
 providers: {
-  desktop: { provider: screenRelayProvider, config: { url: "http://127.0.0.1:8080" } },
+  desktop: { module: "@appport/screen-relay/provider", export: "screenRelayProvider", config: { url: "http://127.0.0.1:8080" } },
 },
 ```
 
