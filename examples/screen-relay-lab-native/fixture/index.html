@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Screen Relay Lab fixture</title>
+<style>
+  html, body { margin: 0; height: 100%; font: 24px system-ui, sans-serif; background: #ffffff; color: #111111; }
+  #banner { position: fixed; inset: 0 0 auto 0; height: 16vh; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 700; font-size: 5vh; background: #2563eb; }
+  body[data-state="success"] #banner { background: #16a34a; }
+  body[data-state="failure"] #banner { background: #dc2626; }
+  #value { position: fixed; left: 25vw; width: 50vw; top: 36vh; height: 12vh; box-sizing: border-box; font-size: 5vh; padding: 0 2vw; border: 3px solid #111111; }
+  #submit { position: fixed; left: 35vw; width: 30vw; top: 54vh; height: 12vh; font-size: 5vh; border: 0; background: #111111; color: #ffffff; }
+  #status { position: fixed; left: 0; right: 0; top: 74vh; text-align: center; font-size: 4vh; }
+</style>
+</head>
+<body data-state="ready">
+  <div id="banner">READY</div>
+  <input id="value" autocomplete="off" spellcheck="false" aria-label="Value">
+  <button id="submit" type="button">Submit</button>
+  <div id="status">Accepted: <span id="count">0</span></div>
+  <script>
+    const expected = "relay-lab-42";
+    let count = 0;
+    document.getElementById("submit").addEventListener("click", () => {
+      const ok = document.getElementById("value").value === expected;
+      if (ok) count += 1;
+      document.getElementById("count").textContent = String(count);
+      document.body.dataset.state = ok ? "success" : "failure";
+      document.getElementById("banner").textContent = ok ? "SUCCESS" : "WRONG VALUE";
+    });
+  </script>
+</body>
+</html>
