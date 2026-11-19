@@ -3,7 +3,7 @@
 Desktop streaming and control for humans and AI agents: watch a desktop in a browser, and click, type, and take screenshots from the shell.
 
 <p>
-  <a href="https://www.npmjs.com/package/@boundry/screen-relay"><img alt="npm version: @boundry/screen-relay" src="https://img.shields.io/npm/v/@boundry/screen-relay.svg?style=for-the-badge&amp;labelColor=000000" height="28"></a>
+  <a href="https://www.npmjs.com/package/@appport/screen-relay"><img alt="npm version: @appport/screen-relay" src="https://img.shields.io/npm/v/@appport/screen-relay.svg?style=for-the-badge&amp;labelColor=000000" height="28"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/LICENSE-APACHE--2.0-97ca00.svg?style=for-the-badge&amp;labelColor=000000" height="28"></a>
 </p>
 
@@ -12,7 +12,7 @@ screen-relay starts a desktop on a Linux VM, sandbox, or container, or attaches 
 ## Install
 
 ```bash
-npm install -g @boundry/screen-relay
+npm install -g @appport/screen-relay
 screen-relay install            # system packages and the engine build (first time only)
 ```
 

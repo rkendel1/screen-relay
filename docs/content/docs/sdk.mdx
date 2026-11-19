@@ -8,7 +8,7 @@ The Node SDK requires Node 22 or newer. Start a desktop on the same machine with
 ## Install and import
 
 ```sh
-npm install @boundry/screen-relay
+npm install @appport/screen-relay
 ```
 
 ### One-shot calls
@@ -16,7 +16,7 @@ npm install @boundry/screen-relay
 A viewer opens view-only, so these calls work while it watches. A viewer that took control makes `click` return `busy`; choose **Release control** in the viewer first.
 
 ```js
-import { createClient } from '@boundry/screen-relay';
+import { createClient } from '@appport/screen-relay';
 import { writeFile } from 'node:fs/promises';
 const desktop = createClient();
 await desktop.click(0.5, 0.5);
@@ -33,7 +33,7 @@ await writeFile('screen.png', await desktop.screenshot());
 Close the session to release input:
 
 ```js
-import { connect } from '@boundry/screen-relay';
+import { connect } from '@appport/screen-relay';
 
 const desktop = await connect();
 try {

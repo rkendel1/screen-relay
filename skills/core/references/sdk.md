@@ -1,13 +1,13 @@
 # Node SDK
 
-A script needs the package as a local dependency in its project. The global install (`npm install -g @boundry/screen-relay`) provides only the CLI.
+A script needs the package as a local dependency in its project. The global install (`npm install -g @appport/screen-relay`) provides only the CLI.
 
 ```sh
-npm install @boundry/screen-relay
+npm install @appport/screen-relay
 ```
 
 ```js
-import { createClient, connect, RelayError } from '@boundry/screen-relay';
+import { createClient, connect, RelayError } from '@appport/screen-relay';
 ```
 
 ## Options
@@ -59,7 +59,7 @@ Failures throw `RelayError`. Its `reason` is one of the reasons the CLI reports.
 
 ```js
 import { writeFile } from 'node:fs/promises';
-import { createClient } from '@boundry/screen-relay';
+import { createClient } from '@appport/screen-relay';
 
 const client = createClient();
 await writeFile('screen.png', await client.screenshot());

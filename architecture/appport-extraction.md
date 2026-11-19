@@ -31,7 +31,7 @@ So decoupling is mostly removal and replacement at the edges. The work that need
 | ID | Location | Coupling | Ships to users | Proposed action |
 | --- | --- | --- | --- | --- |
 | V-1 | `src/cli/mode.ts`, `package.json` | `@vercel/detect-agent` decides the CLI's agent mode | Yes | Replace with a local check of known agent environment variables. `SCREEN_RELAY_AGENT=1/0` already overrides detection and stays as the authority. |
-| V-2 | `package.json` `repository.url` | Points at `vercel-labs/screen-relay` | Yes | Point at this repository once identity is decided (D-1). |
+| V-2 | `package.json` `repository.url` | Points at `vercel-labs/screen-relay` | Yes | Done: points at `rkendel1/screen-relay`. |
 | V-3 | `skills/vercel-sandbox/SKILL.md`, `skills/core/SKILL.md:170`, `skills/screen-relay/SKILL.md:21`, `tests/unit/cli-skills.test.mjs:13` | `screen-relay skills` serves a Vercel-specific skill | Yes | Replace with a provider-neutral `remote-host` skill: the engine on a remote machine, reached through a tunnel or TLS proxy with a token. Vendor recipes belong in the docs as examples, not in the shipped skill set. |
 | V-4 | `src/cli/help.ts:6`, README, docs pages | Links to `screen-relay.dev` and `github.com/vercel-labs/screen-relay` | Yes (help text) | Follow D-1 and D-2. |
 | V-5 | `README.md:6` | "Vercel Labs Experiment" badge | Yes (npm README) | Remove. |
@@ -40,7 +40,7 @@ So decoupling is mostly removal and replacement at the edges. The work that need
 | V-8 | `examples/mcp-app/sandbox.ts`, `config.ts`, `README.md` | Executes commands through Vercel's `sandbox exec` with a `/vercel/.local/bin` path | No | Superseded by `desktop.process` and `@appport/mcp` (G-9). Delete the sandbox shim once that exists. |
 | V-9 | `LICENSE:189`, `THIRD-PARTY-NOTICES.md` | Upstream copyright notice | Yes | Keep. Apache-2.0 requires retaining the upstream copyright and notices in a derivative work. Add this project's copyright beside it; do not remove Vercel's. |
 | V-10 | `.agents/skills/technical-writer`, `.agents/skills/architecture-diagram` | Contributor tooling written in Vercel's editorial voice and style | No | Low priority. Rewrite the voice references when the docs move. |
-| V-11 | `.github/workflows/release.yml` | Publishes `screen-relay` to npm with trusted publishing | Process | Cannot work from this fork: the npm name belongs to the upstream maintainer. Blocked on D-1. |
+| V-11 | `.github/workflows/release.yml` | Publishes `screen-relay` to npm with trusted publishing | Process | Publishes the name in `package.json`, now `@appport/screen-relay`. Needs a trusted publisher configured for that package on npm. |
 
 The CI workflow, `Dockerfile`, and `Makefile` have no Vercel references.
 
@@ -51,8 +51,8 @@ screen-relay has four layers. Their boundaries are already reasonable, and the e
 | Layer | Source | Runs where | Public contract today |
 | --- | --- | --- | --- |
 | Engine | `src/engine/` (C++): `core/` for capture, encoding, flow control, and input; `backends/` for X11, Wayland, macOS, and Windows; `server/` for HTTP and WebSocket | On the machine that shows the desktop | HTTP and WebSocket on one port, documented in `PROTOCOL.md`: `GET /capabilities`, `GET /screenshot.png`, `POST /input`, `POST /tickets`, `GET /metrics`, WS `/stream`, `/stream?view=1`, `/control`, plus the viewer at `/` |
-| Protocol | `src/protocol/` (TypeScript) | Anywhere | Input record and NSL1 message encoding, error reasons. Exported as `@boundry/screen-relay/protocol`. |
-| SDK | `src/sdk/` | Anywhere with network access to the engine | `createClient`, `connect`, `capabilities`, `status`, `screenshot`. Exported as `@boundry/screen-relay`. |
+| Protocol | `src/protocol/` (TypeScript) | Anywhere | Input record and NSL1 message encoding, error reasons. Exported as `@appport/screen-relay/protocol`. |
+| SDK | `src/sdk/` | Anywhere with network access to the engine | `createClient`, `connect`, `capabilities`, `status`, `screenshot`. Exported as `@appport/screen-relay`. |
 | CLI host | `src/cli/host/` | On the desktop machine | `install`, `up`, `down`, `status`, `logs`, `run`, `doctor`. Local only: there is no API for session lifecycle or launching apps. |
 | Viewer | `viewer/` | Browser | Speaks NSL1 over `/stream`. Authenticates with the session token from the URL fragment; it does not accept one-time tickets yet (`PROTOCOL.md`). |
 
@@ -125,12 +125,12 @@ Severity: **blocker** stops the extraction; **high** stops a capability from wor
 
 | ID | Gap | Evidence | Severity | Proposed resolution | Needs a decision |
 | --- | --- | --- | --- | --- | --- |
-| G-1 | The fork cannot publish under the `screen-relay` npm name | `npm view screen-relay maintainers` returns the upstream maintainer; `release.yml` publishes that name | blocker for releases | Publish under a new name or scope and update `bin`, `exports`, docs, and `scripts/check-version-sync.mjs` | D-1 |
+| G-1 | The fork cannot publish under the `screen-relay` npm name | `npm view screen-relay maintainers` returns the upstream maintainer; `release.yml` publishes that name | blocker for releases | Renamed to `@appport/screen-relay`. Publishing access is unverified from the development environment, and trusted publishing for a new package must be configured on npm before the Release workflow can publish it. | |
 | G-2 | No AppPort application exists | No `appport` reference anywhere in the repository | blocker | Add `src/app/`: capability definitions, `createApplication`, and a `screen-relay serve` command that runs `@appport/server` against an engine | |
 | G-3 | No `DesktopProvider` or `HostProvider` interface | The SDK and CLI host are called directly | high | Define both as TypeScript interfaces in `src/app/providers/`. The first implementations wrap `src/sdk` and `src/cli/host` without changing them. | |
 | G-4 | AppPort has no byte transfer for screenshots | `BlobRef` is a reference only; transfer is the application's job | high | v1: return PNG as base64 with `width`, `height`, and `contentType`, which is also what MCP image content uses. Measure size at common resolutions before adopting it. A `BlobRef` with a ticketed URL is the follow-up if the size cost is real. | |
 | G-5 | The bundled viewer cannot authenticate with a one-time ticket | `PROTOCOL.md`: "The bundled viewer doesn't use tickets yet" | high | Teach `viewer/main.ts` to offer `ticket.TICKET` from the URL fragment. Without this, `desktop.stream.open` must hand out the session token, which breaks rule 4. | |
-| G-6 | One token grants everything, and tickets have no scope | Engine has a single token. `Tickets::redeem` (`src/engine/server/config.cpp:178`) records no scope, and `server.cpp:479` accepts a ticket for any WebSocket, so a ticket issued for viewing can open `/stream` without `?view=1` or `/control` and take input | high | Keep the token on the host only (trusted boundary mode) and enforce permissions in AppPort. Add a scope to tickets in the engine (`view` or `control`) so `desktop.stream.open` can hand a `desktop.view` caller a ticket that cannot take input. This is the one engine change the extraction needs. | |
+| G-6 | One token grants everything, and tickets have no scope | Engine has a single token. `Tickets::redeem` (`src/engine/server/config.cpp:178`) records no scope, and `server.cpp:479` accepts a ticket for any WebSocket, so a ticket issued for viewing can open `/stream` without `?view=1` or `/control` and take input | high | Keep the token on the host only (trusted boundary mode) and enforce permissions in AppPort. Add a scope to tickets in the engine so `desktop.stream.open` can hand a `desktop.view` caller a ticket that cannot take input. Requirements: view and control tickets are distinct, a view ticket can never open a controlling connection (`/stream` without `?view=1`, or `/control`), and every ticket is short-lived, single-use, and bound to the session and connection purpose it was issued for. This is the one engine change the extraction needs, and it waits until the engine tests pass in CI on this repository. | |
 | G-7 | Session lifecycle is CLI-only and local | `cmdUp`, `cmdDown`, `cmdStatus` read and write local state in `src/cli/host/state.ts` | high | Refactor the command bodies into functions that `HostProvider` calls, keeping the CLI as a thin caller. The CLI output and tests must not change. | |
 | G-8 | `desktop.process.run` is arbitrary code execution on the desktop machine | `cmdRun` spawns any command | high | Off by default. Exposed only when the host config enables it, with its own permission and, optionally, an allowlist of app names. | D-4 |
 | G-9 | The MCP example is vendor-bound and duplicates capability definitions | `examples/mcp-app/sandbox.ts`, `tools.ts` | medium | Replace tools with `@appport/mcp`. Keep the `ui://` viewer resource, which MCP Apps needs and `@appport/mcp` does not provide. | |
@@ -146,10 +146,10 @@ Severity: **blocker** stops the extraction; **high** stops a capability from wor
 
 | ID | Decision | Options | Recommendation |
 | --- | --- | --- | --- |
-| D-1 | Package identity | A new unscoped name; a scope you control; stay a private fork with no npm releases | A scope you control. It also gives a home to the provider packages if they are ever split out. |
-| D-2 | Docs platform | Keep Next.js and `fumadocs` without the Vercel pieces; a static site generator; repository Markdown only | `fumadocs` with static export. The content and MDX components carry over, and the result deploys to any static host. |
-| D-3 | Where the AppPort application lives | In this package as `src/app/` with a `serve` command; a separate package | In this package. Splitting before a second consumer exists adds a release boundary with nothing on the other side. |
-| D-4 | Whether `desktop.process.run` ships in v1 | Ship disabled by default; defer | Ship disabled by default, because the agent loop needs a way to open an app, and today that requires shell access to the machine. |
+| D-1 | Package identity | A new unscoped name; a scope you control; stay a private fork with no npm releases | **Decided:** `@appport/screen-relay`. The command stays `screen-relay` and the repository stays `rkendel1/screen-relay`. The package is one application built on AppPort; AppPort's libraries stay in their own repository. |
+| D-2 | Docs platform | Keep Next.js and `fumadocs` without the Vercel pieces; a static site generator; repository Markdown only | **Decided:** static `fumadocs`, with no hosted AI features or analytics. |
+| D-3 | Where the AppPort application lives | In this package as `src/app/` with a `serve` command; a separate package | **Decided:** `src/app/` with a `serve` command, until a second consumer exists. |
+| D-4 | Whether `desktop.process.run` ships in v1 | Ship disabled by default; defer | **Decided:** disabled by default, separately authorized, and audited. It is remote shell access, not a desktop interaction. |
 
 ## Sequencing
 

@@ -6,7 +6,7 @@ Start with `screen-relay doctor`. For each reason, such as `busy` or `unauthoriz
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `screen-relay: command not found` | npm's global `bin` directory is not on `PATH`, or the global install did not finish. | Run `npm install -g @boundry/screen-relay` again. Then check that `$(npm prefix -g)/bin` is on `PATH`. |
+| `screen-relay: command not found` | npm's global `bin` directory is not on `PATH`, or the global install did not finish. | Run `npm install -g @appport/screen-relay` again. Then check that `$(npm prefix -g)/bin` is on `PATH`. |
 | `component_failed` from `up`, or `status` shows `failed` | A component exited during startup or after ready. The session stops. | Read `data.component`, then `screen-relay logs <component>`. For `-d`, also read `supervisor.log` in the directory named by `session.logs` in `screen-relay status --json`. |
 | `unreachable` with `Connection refused.` | Nothing is listening on the address. | For a local session, run `screen-relay up -d`. Otherwise check the port. |
 | `unreachable` with `The TLS certificate was rejected.` | The certificate is not trusted or names another host. | Use a trusted certificate for the public host, or pass the local session's certificate. |

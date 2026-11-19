@@ -13,7 +13,7 @@ Use this when the desktop runs on a machine you reach over the network: a cloud 
 2. Install the CLI:
 
    ```sh
-   npm install -g @boundry/screen-relay
+   npm install -g @appport/screen-relay
    ```
 
 3. Install the system packages and build the engine:
