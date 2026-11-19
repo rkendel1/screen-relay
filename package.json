@@ -43,6 +43,7 @@
   "scripts": {
     "build": "node build.mjs",
     "test": "npm run build && node --test tests/unit/*.test.mjs",
+    "publish:packages": "node scripts/publish-packages.mjs",
     "test:e2e": "node tests/e2e/viewer.mjs",
     "typecheck": "tsc -p ."
   },
