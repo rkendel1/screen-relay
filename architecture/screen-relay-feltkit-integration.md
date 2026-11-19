@@ -2,7 +2,76 @@
 
 This is an integration audit of the FeltKit and AppPort developer experience, with `@appport/screen-relay` as the test instrument. It records what composes today, what the probe application had to hand-write, where each piece of that glue belongs, and the smallest set of changes that would remove it for every AppPort package, not only this one.
 
-Status: assessment and plan, 2026-11-19. No FeltKit, AppPort, or AppPort Services code has been changed yet; the platform changes below wait on the decisions in [section G](#g-deferred-decisions).
+Status: the approved changes are implemented on branches and verified against a real desktop; nothing is published. See [Implementation status](#implementation-status). The assessment below is the baseline it was measured against.
+
+## Implementation status
+
+Decisions G-1 (grants in existing AppPort packages) and G-2 (declarative provider composition in FeltKit) were approved, along with the external execution model. Work is on branch `claude/youthful-lamport-kpv4gw` in each repository.
+
+| Change | Repository | Commits | Evidence |
+| --- | --- | --- | --- |
+| AP-1: `ChannelRef`, `AccessGrantToken`, schema builders | `rkendel1/appport` (`packages/protocol`, `packages/schema`) | `2e6a57d` | Protocol and schema tests; a channel reference rejects any secret field |
+| AP-1: access grants, `AccessGrantStore`, memory store, conformance suite | `rkendel1/appport` (`packages/core`, `packages/testing`) | `2e6a57d` | 8 conformance cases: digest-only storage, single redemption among 16 or 32 concurrent attempts, replay, expiry, revocation, mismatch without consumption |
+| Provider contract and external effect lifecycle | `rkendel1/appport` (`packages/core/src/providers.ts`) | `bad8ea2`, `36e3c26`, `375d6f2` | 13 tests through `createApplication`: authorization before the provider runs, started before the effect, effect not attempted when the start cannot be recorded, failed versus unknown, an unattributable effect refused |
+| Provider channels | `rkendel1/appport` | `f4b4d75` | 3 tests: reference and grant kept separate, a view grant does not satisfy control |
+| SR-1: Screen Relay provider | `rkendel1/screen-relay` (`src/app/provider.ts`, export `./provider`) | `8eb0457`, `f6403e3` | 5 tests, 2 against a real engine: describe, screenshot, click, type; a view grant streams without holding input, a replayed grant is refused, a control grant holds input |
+| SR-2: viewer export; SR-5: encoder types | `rkendel1/screen-relay` (`src/stream/attach.ts`, export `./viewer`) | `8eb0457` | Used by the native lab in Chrome |
+| FK-1, FK-2, FK-5: `feltkit({ providers })` | `rkendel1/feltkit` (`src/providers.ts`, `src/runtime/providers.ts`) | `77eaa86`, `a21f1ec` | 8 tests: manifest, roles, recorded effects, failed versus unknown (`OUTCOME_UNKNOWN`, as integrations), action path, restart, missing credential |
+| FK-6: channel endpoint and FeltDB grant store | `rkendel1/feltkit` (`src/runtime/access-grants.ts`, `/_provider/<name>/<channel>`) | `77eaa86`, `a21f1ec` | AppPort's grant conformance on both FeltDB storage kinds (16 cases); a channel opened over HTTP, redeemed once, refused without or with a used grant |
+| FK-8: `client.invoke` and `POST /api/capability/<name>` | `rkendel1/feltkit` | `77eaa86`, `a21f1ec` | Covered by the channel test; roles refuse an observer |
+| Native lab | `rkendel1/screen-relay` (`examples/screen-relay-lab-native`) | `3161071`, `3f2df8a` | Live test and Chrome run below |
+
+### Suites
+
+| Repository | Baseline | Branch |
+| --- | --- | --- |
+| `rkendel1/appport` (vitest, all packages) | 1,955 passed, 1 skipped (audit snapshot updated for the new files) | 1,972 passed, 1 skipped; boundary check passes |
+| `rkendel1/feltkit` (`npm test`, node and conformance) | 848 tests: 836 passed, 0 failed, 3 skipped (clean worktree at `0662d20`) | 856 tests: 844 passed, 0 failed, 3 skipped; `npm run typecheck` passes |
+| `rkendel1/screen-relay` (`npm test`) | 151 passed, 11 skipped | 158 passed, 13 skipped (the 2 live tests run with `RELAY_LIVE=1` and pass) |
+
+### End-to-end evidence
+
+Against a real X11 desktop (Ubuntu 24.04, 1280×720), the native lab, started with `npm run dev`:
+
+- Operator: `desktop.stream.view` returned a channel and a grant; the browser streamed from `ws://localhost:3000/_provider/desktop/stream` (153 distinct colors sampled; the engine was never contacted from the browser). The fixture passed (`ready → success`) through `desktop.input.*`; a click and typing through the UI reached the desktop.
+- Observer: the stream went live with her own view grant; her click was refused with "Missing permission: desktop.control".
+- Engine stopped: the page showed "Unavailable" with "Screen Relay unreachable: Connection refused." and offered no stream.
+- `LAB_LIVE=1 npm test`: the fixture passed, and the screenshots and the `fixture.passed` record survived `restart()`, with no grant, token, or ticket in them.
+
+### Baseline compared
+
+Non-blank, non-comment lines the application owns, excluding the fixture and its check (24 lines, identical):
+
+| | Baseline lab | Native lab |
+| --- | ---: | ---: |
+| Provider module, actions, record mutations, stream viewer, app definition | 353 | 91 |
+| UI (`App.tsx`) | 149 | 165 |
+
+What moved out of the application: the provider module and record mutations (into `@appport/screen-relay/provider` and FeltKit's provider host and call records), the 86-line stream decoder (into `@appport/screen-relay/viewer`), the invented connection model, and the loopback-only stream (replaced by a grant-scoped channel on the app's port). About 10 of the remaining 91 lines are still glue: the base64 screenshot handoff (FK-4) and turning a relative channel URL into a WebSocket URL.
+
+### New findings while implementing
+
+| ID | P | Category | Finding | Status |
+| --- | --- | --- | --- | --- |
+| FK-8 | P1 | FeltKit platform gap | The browser client could call functions but not an AppPort capability by name; in cookie mode it holds no token for `/appport` | Fixed: `client.invoke`, `POST /api/capability/<name>` |
+| FK-9 | P2 | FeltKit platform gap | An app with no collections of its own cannot start (FeltDB needs one), even when providers do all its work | Open; documented in `docs/PROVIDERS.md` |
+| FK-10 | P3 | FeltKit platform gap | `feltkit build` and `feltkit dev` report "0 capabilities" for an app whose capabilities come from providers; `/appport/manifest` lists them | Open |
+| FK-11 | P2 | FeltKit platform gap | Functions cannot read provider call records (`_feltkit_provider_calls`); only Studio and inspect can | Open |
+| FK-12 | P2 | FeltKit platform gap | An app that declares a provider cannot build for AppBoundry, which cannot run provider code | Open by design; documented |
+| AP-4 | P1 | AppPort package gap | Core dispatched an in-process request without a `requestId`, so two external effects recorded under the same key | Fixed: `begin()` refuses an unattributable effect |
+| AP-5 | P2 | AppPort package gap | `effectFailed` crossed copies of `@appport/core` only by `instanceof` | Fixed: a registry symbol |
+
+Status of the original register: SR-1, SR-2, SR-5, AP-1, FK-1, FK-2, FK-5, FK-6 are done. SR-3 (engine ticket scopes) is designed, not implemented: the provider relay already enforces view and control at the boundary, and engine scopes remain defense in depth. SR-4, FK-3, FK-4, FK-7, AP-2, AP-3 are open.
+
+### Release order and remaining blockers
+
+1. AppPort publishes `@appport/protocol`, `@appport/schema`, `@appport/core`, and `@appport/testing` with these changes. Until then, Screen Relay's CI typecheck fails (it installs the published `@appport/core` 1.8.0, which has no `defineProvider`), and FeltKit pins `@appport/core` 1.8.0, which must move to the new version.
+2. FeltKit publishes with `feltkit({ providers })`.
+3. `@appport/screen-relay` publishes with its peer dependency ranges pointing at the released core.
+
+No package was published and no version was changed.
+
+
 
 ## Sources
 
